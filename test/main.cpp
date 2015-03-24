@@ -83,5 +83,23 @@ int main(int argc, char **argv) {
     }
   }
 
+  value = json::value{
+    json::object{
+      {"key", json::value(42)},
+      {"string", json::value("value")},
+      {"array", json::value(json::array{
+        json::value(42),
+        json::value("string"),
+        json::value(false),
+        json::value()
+      })}
+    }
+  };
+
+  std::string json = json::write(value, "  ");
+  printf("%s\n", json.c_str());
+
+  json::read(json);
+
   return 0;
 }
