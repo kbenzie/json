@@ -29,7 +29,7 @@ json::value read(const std::string &string);
 std::string write(const json::value &value, const char *indent = "  ");
 
 // Helpers
-#define ENABLE_NUMBER(Type) \
+#define ENABLE_IF_NUMBER(Type) \
   typename std::enable_if<std::is_arithmetic<Type>::value, Type>::type *
 
 // Objects
@@ -41,7 +41,7 @@ class value {
   explicit value(json::pair pair);
   explicit value(json::array array);
   template <typename Number>
-  value(Number number, ENABLE_NUMBER(Number) = 0);
+  value(Number number, ENABLE_IF_NUMBER(Number) = 0);
   explicit value(const char *string);
   explicit value(std::string string);
   explicit value(bool boolean);
@@ -144,7 +144,7 @@ value::value(json::pair pair)
 value::value(json::array array)
     : mType(TYPE_ARRAY), mStore(std::make_shared<store<json::array>>(array)) {}
 template <typename Number>
-value::value(Number number, ENABLE_NUMBER(Number))
+value::value(Number number, ENABLE_IF_NUMBER(Number))
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 value::value(const char *string)
     : mType(TYPE_STRING),
@@ -157,7 +157,7 @@ value::value(bool boolean)
 json::type &value::type() { return mType; }
 const json::type &value::type() const { return mType; }
 
-#undef ENABLE_NUMBER
+#undef ENABLE_IF_NUMBER
 #define CAST(Type) static_cast<store<Type> *>(mStore.get())
 
 json::object &value::object() { return CAST(json::object)->value; }
@@ -180,7 +180,9 @@ template <typename Type>
 object::object(std::string key, Type value) {
   mEntries[key] = value;
 }
-object::object(std::initializer_list<json::pair> pairs) { mEntries.insert(pairs); }
+object::object(std::initializer_list<json::pair> pairs) {
+  mEntries.insert(pairs);
+}
 void object::add(std::string key, json::value value) { mEntries[key] = value; }
 void object::add(json::pair pair) { mEntries.insert(pair); }
 json::value &object::get(std::string key) { return mEntries.at(key); }
