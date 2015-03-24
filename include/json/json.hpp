@@ -22,27 +22,15 @@ enum type {
 class value;
 class object;
 class array;
-typedef std::pair<std::string, json::value> pair;
+typedef std::pair<const std::string, json::value> pair;
 
 // API
-std::string write(const json::value &value, const char *indent = "  ");
 json::value read(const std::string &string);
+std::string write(const json::value &value, const char *indent = "  ");
 
-// Helper macros
+// Helpers
 #define ENABLE_NUMBER(Type) \
   typename std::enable_if<std::is_arithmetic<Type>::value, Type>::type *
-#define RETURN_OBJECT(Type) \
-  typename std::enable_if<std::is_same<json::object, Type>::value, Type>::type
-#define RETURN_ARRAY(Type) \
-  typename std::enable_if<std::is_same<json::array, Type>::value, Type>::type
-#define RETURN_NUMBER(Type) \
-  typename std::enable_if<std::is_arithmetic<Type>::value, Type>::type
-#define RETURN_STRING(Type) \
-  typename std::enable_if<std::is_same<std::string, Type>::value, Type>::type
-#define RETURN_CSTRING(Type) \
-  typename std::enable_if<std::is_same<const char *, Type>::value, Type>::type
-#define RETURN_BOOL(Type) \
-  typename std::enable_if<std::is_same<bool, Type>::value, Type>::type
 
 // Objects
 class value {
@@ -71,30 +59,6 @@ class value {
   const std::string &string() const;
   bool &boolean();
   const bool &boolean() const;
-  template <typename Object>
-      RETURN_OBJECT(Object) & get();
-  template <typename Object>
-      const RETURN_OBJECT(Object) & get() const;
-  template <typename Array>
-      RETURN_ARRAY(Array) & get();
-  template <typename Array>
-      const RETURN_ARRAY(Array) & get() const;
-  template <typename Number>
-      RETURN_NUMBER(Number) & get();
-  template <typename Number>
-      const RETURN_NUMBER(Number) & get() const;
-  template <typename String>
-      RETURN_STRING(String) & get();
-  template <typename String>
-      const RETURN_STRING(String) & get() const;
-  template <typename CString>
-      RETURN_CSTRING(CString) & get();
-  template <typename CString>
-      const RETURN_CSTRING(CString) & get() const;
-  template <typename Bool>
-      RETURN_BOOL(Bool) & get();
-  template <typename Bool>
-      const RETURN_BOOL(Bool) & get() const;
 
  private:
   struct store_base {
@@ -123,6 +87,7 @@ class object {
   object(json::pair pair);
   template <typename Type>
   object(std::string key, Type value);
+  object(std::initializer_list<json::pair> values);
 
   // Accessors
   void add(std::string key, json::value value);
@@ -192,6 +157,7 @@ value::value(bool boolean)
 json::type &value::type() { return mType; }
 const json::type &value::type() const { return mType; }
 
+#undef ENABLE_NUMBER
 #define CAST(Type) static_cast<store<Type> *>(mStore.get())
 
 json::object &value::object() { return CAST(json::object)->value; }
@@ -204,62 +170,7 @@ std::string &value::string() { return CAST(std::string)->value; }
 const std::string &value::string() const { return CAST(std::string)->value; }
 bool &value::boolean() { return CAST(bool)->value; }
 const bool &value::boolean() const { return CAST(bool)->value; }
-template <typename Object>
-    RETURN_OBJECT(Object) & value::get() {
-  return CAST(Object)->value;
-}
-template <typename Object>
-    const RETURN_OBJECT(Object) & value::get() const {
-  return CAST(Object)->value;
-}
-template <typename Array>
-    RETURN_ARRAY(Array) & value::get() {
-  return CAST(Array)->value;
-}
-template <typename Array>
-    const RETURN_ARRAY(Array) & value::get() const {
-  return CAST(Array)->value;
-}
-template <typename Number>
-    RETURN_NUMBER(Number) & value::get() {
-  return CAST(Number)->value;
-}
-template <typename Number>
-    const RETURN_NUMBER(Number) & value::get() const {
-  return CAST(Number)->value;
-}
-template <typename String>
-    RETURN_STRING(String) & value::get() {
-  return CAST(String)->value;
-}
-template <typename String>
-    const RETURN_STRING(String) & value::get() const {
-  return CAST(String)->value;
-}
-template <typename CString>
-    RETURN_CSTRING(CString) & value::get() {
-  return CAST(CString)->value;
-}
-template <typename CString>
-    const RETURN_CSTRING(CString) & value::get() const {
-  return CAST(CString)->value;
-}
-template <typename Bool>
-    RETURN_BOOL(Bool) & value::get() {
-  return CAST(Bool)->value;
-}
-template <typename Bool>
-    const RETURN_BOOL(Bool) & value::get() const {
-  return CAST(Bool)->value;
-}
 
-#undef ENABLE_NUMBER
-#undef RETURN_OBJECT
-#undef RETURN_ARRAY
-#undef RETURN_NUMBER
-#undef RETURN_STRING
-#undef RETURN_CSTRING
-#undef RETURN_BOOL
 #undef CAST
 
 object::object() {}
@@ -269,6 +180,7 @@ template <typename Type>
 object::object(std::string key, Type value) {
   mEntries[key] = value;
 }
+object::object(std::initializer_list<json::pair> pairs) { mEntries.insert(pairs); }
 void object::add(std::string key, json::value value) { mEntries[key] = value; }
 void object::add(json::pair pair) { mEntries.insert(pair); }
 json::value &object::get(std::string key) { return mEntries.at(key); }
