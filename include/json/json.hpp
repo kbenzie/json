@@ -26,7 +26,7 @@ typedef std::pair<const std::string, json::value> pair;
 
 // API
 json::value read(const std::string &string);
-std::string write(const json::value &value, const char *indent = "  ");
+std::string write(const json::value &value, const char *tab = "\t");
 
 // Helpers
 #define ENABLE_IF_NUMBER(Type) \
@@ -135,84 +135,93 @@ class array {
 };
 
 // Implementations
-value::value() : mType(TYPE_NULL), mStore(nullptr) {}
-value::value(json::object object)
+inline value::value() : mType(TYPE_NULL), mStore(nullptr) {}
+inline value::value(json::object object)
     : mType(TYPE_OBJECT),
       mStore(std::make_shared<store<json::object>>(object)) {}
-value::value(json::pair pair)
+inline value::value(json::pair pair)
     : mType(TYPE_OBJECT), mStore(std::make_shared<store<json::object>>(pair)) {}
-value::value(json::array array)
+inline value::value(json::array array)
     : mType(TYPE_ARRAY), mStore(std::make_shared<store<json::array>>(array)) {}
 template <typename Number>
-value::value(Number number, ENABLE_IF_NUMBER(Number))
+inline value::value(Number number, ENABLE_IF_NUMBER(Number))
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-value::value(const char *string)
+inline value::value(const char *string)
     : mType(TYPE_STRING),
       mStore(std::make_shared<store<std::string>>(string)) {}
-value::value(std::string string)
+inline value::value(std::string string)
     : mType(TYPE_STRING),
       mStore(std::make_shared<store<std::string>>(string)) {}
-value::value(bool boolean)
+inline value::value(bool boolean)
     : mType(TYPE_BOOL), mStore(std::make_shared<store<bool>>(boolean)) {}
-json::type &value::type() { return mType; }
-const json::type &value::type() const { return mType; }
 
 #undef ENABLE_IF_NUMBER
-#define CAST(Type) static_cast<store<Type> *>(mStore.get())
+#define CAST(Type) static_cast<store<Type> *>(mStore.get())->value
 
-json::object &value::object() { return CAST(json::object)->value; }
-const json::object &value::object() const { return CAST(json::object)->value; }
-json::array &value::array() { return CAST(json::array)->value; }
-const json::array &value::array() const { return CAST(json::array)->value; }
-double &value::number() { return CAST(double)->value; }
-const double &value::number() const { return CAST(double)->value; }
-std::string &value::string() { return CAST(std::string)->value; }
-const std::string &value::string() const { return CAST(std::string)->value; }
-bool &value::boolean() { return CAST(bool)->value; }
-const bool &value::boolean() const { return CAST(bool)->value; }
+inline json::type &value::type() { return mType; }
+inline const json::type &value::type() const { return mType; }
+inline json::object &value::object() { return CAST(json::object); }
+inline const json::object &value::object() const { return CAST(json::object); }
+inline json::array &value::array() { return CAST(json::array); }
+inline const json::array &value::array() const { return CAST(json::array); }
+inline double &value::number() { return CAST(double); }
+inline const double &value::number() const { return CAST(double); }
+inline std::string &value::string() { return CAST(std::string); }
+inline const std::string &value::string() const { return CAST(std::string); }
+inline bool &value::boolean() { return CAST(bool); }
+inline const bool &value::boolean() const { return CAST(bool); }
 
 #undef CAST
 
-object::object() {}
-object::object(std::string key, json::value value) { mEntries[key] = value; }
-object::object(json::pair pair) { mEntries.insert(pair); }
-template <typename Type>
-object::object(std::string key, Type value) {
+inline object::object() {}
+inline object::object(std::string key, json::value value) {
   mEntries[key] = value;
 }
-object::object(std::initializer_list<json::pair> pairs) {
+inline object::object(json::pair pair) { mEntries.insert(pair); }
+template <typename Type>
+inline object::object(std::string key, Type value) {
+  mEntries[key] = value;
+}
+inline object::object(std::initializer_list<json::pair> pairs) {
   mEntries.insert(pairs);
 }
-void object::add(std::string key, json::value value) { mEntries[key] = value; }
-void object::add(json::pair pair) { mEntries.insert(pair); }
-json::value &object::get(std::string key) { return mEntries.at(key); }
-const json::value &object::get(std::string key) const {
+
+inline void object::add(std::string key, json::value value) {
+  mEntries[key] = value;
+}
+inline void object::add(json::pair pair) { mEntries.insert(pair); }
+inline json::value &object::get(std::string key) { return mEntries.at(key); }
+inline const json::value &object::get(std::string key) const {
   return mEntries.at(key);
 }
-object::iterator object::begin() { return mEntries.begin(); }
-object::const_iterator object::begin() const { return mEntries.begin(); }
-object::iterator object::end() { return mEntries.end(); }
-object::const_iterator object::end() const { return mEntries.end(); }
+inline object::iterator object::begin() { return mEntries.begin(); }
+inline object::const_iterator object::begin() const { return mEntries.begin(); }
+inline object::iterator object::end() { return mEntries.end(); }
+inline object::const_iterator object::end() const { return mEntries.end(); }
 
-array::array(std::initializer_list<json::value> values) : mEntries(values) {}
+inline array::array(std::initializer_list<json::value> values)
+    : mEntries(values) {}
 template <typename... Args>
-array::array(Args... args)
+inline array::array(Args... args)
     : mEntries(args...) {}
-void array::append(json::value value) { mEntries.push_back(value); }
-array::iterator array::begin() { return mEntries.begin(); }
-array::const_iterator array::begin() const { return mEntries.begin(); }
-array::iterator array::end() { return mEntries.end(); }
-array::const_iterator array::end() const { return mEntries.end(); }
-json::value &array::operator[](const size_t index) { return mEntries[index]; }
-const json::value &array::operator[](const size_t index) const {
+
+inline void array::append(json::value value) { mEntries.push_back(value); }
+inline array::iterator array::begin() { return mEntries.begin(); }
+inline array::const_iterator array::begin() const { return mEntries.begin(); }
+inline array::iterator array::end() { return mEntries.end(); }
+inline array::const_iterator array::end() const { return mEntries.end(); }
+inline json::value &array::operator[](const size_t index) {
   return mEntries[index];
 }
-json::value &array::at(const size_t index) { return mEntries.at(index); }
-const json::value &array::at(const size_t index) const {
+inline const json::value &array::operator[](const size_t index) const {
+  return mEntries[index];
+}
+inline json::value &array::at(const size_t index) { return mEntries.at(index); }
+inline const json::value &array::at(const size_t index) const {
   return mEntries.at(index);
 }
-size_t array::size() { return mEntries.size(); }
-size_t array::size() const { return mEntries.size(); }
+inline size_t array::size() { return mEntries.size(); }
+inline size_t array::size() const { return mEntries.size(); }
 }
 
 #endif
