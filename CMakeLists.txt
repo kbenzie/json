@@ -20,3 +20,4 @@ add_library(JSON
 
 add_executable(UnitJSON
   ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp)
+target_link_libraries(UnitJSON JSON)
