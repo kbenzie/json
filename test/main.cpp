@@ -1,5 +1,7 @@
 #include <json/json.hpp>
 
+#include <cmath>
+
 const char *typeStr(json::type type) {
   switch (type) {
     case json::TYPE_OBJECT:
@@ -88,9 +90,9 @@ int main(int argc, char **argv) {
       {"key", json::value(42)},
       {"string", json::value("value")},
       {"array", json::value(json::array{
-        json::value(42),
+        json::value(4 * atan(1)),
         json::value("string"),
-        json::value(false),
+        json::value(true),
         json::value()
       })}
     }
@@ -99,7 +101,35 @@ int main(int argc, char **argv) {
   std::string json = json::write(value, "  ");
   printf("%s\n", json.c_str());
 
-  json::read(json);
+  value = json::read(json);
+
+  printf("%s\n", typeStr(value.type()));
+  object = value.object();
+
+  for (auto &value : object) {
+    printf("\"%s\": %s\n", value.first.c_str(), typeStr(value.second.type()));
+  }
+
+  array = object.get("array").array();
+  for (auto &value : array) {
+    switch (value.type()) {
+      case json::TYPE_OBJECT:
+      case json::TYPE_ARRAY:
+        break;
+      case json::TYPE_NUMBER:
+        printf("%f\n", value.number());
+        break;
+      case json::TYPE_STRING:
+        printf("\"%s\"\n", value.string().c_str());
+        break;
+      case json::TYPE_BOOL:
+        printf("%s\n", value.boolean() ? "true" : "false");
+        break;
+      case json::TYPE_NULL:
+        printf("null\n");
+        break;
+    }
+  }
 
   return 0;
 }
