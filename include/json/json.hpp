@@ -30,7 +30,7 @@ std::string write(const json::value &value, const char *tab = "\t");
 
 // Helpers
 #define ENABLE_IF_NUMBER(Type) \
-  typename std::enable_if<std::is_arithmetic<Type>::value, Type>::type *
+  typename std::enable_if<std::is_arithmetic<Type>::value, void>::type
 
 // Objects
 class value {
@@ -41,7 +41,7 @@ class value {
   explicit value(json::pair pair);
   explicit value(json::array array);
   template <typename Number>
-  value(Number number, ENABLE_IF_NUMBER(Number) = 0);
+  value(Number number, ENABLE_IF_NUMBER(Number));
   explicit value(const char *string);
   explicit value(std::string string);
   explicit value(bool boolean);
