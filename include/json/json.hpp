@@ -28,20 +28,24 @@ typedef std::pair<const std::string, json::value> pair;
 json::value read(const std::string &string);
 std::string write(const json::value &value, const char *tab = "\t");
 
-// Helpers
-#define ENABLE_IF_NUMBER(Type) \
-  typename std::enable_if<std::is_arithmetic<Type>::value, void>::type
-
 // Objects
 class value {
  public:
   // Constructors
-  value();
+  value();  // NOTE: A null value
   explicit value(json::object object);
   explicit value(json::pair pair);
   explicit value(json::array array);
-  template <typename Number>
-  value(Number number, ENABLE_IF_NUMBER(Number));
+  explicit value(int8_t number);
+  explicit value(int16_t number);
+  explicit value(int32_t number);
+  explicit value(int64_t number);
+  explicit value(uint8_t number);
+  explicit value(uint16_t number);
+  explicit value(uint32_t number);
+  explicit value(uint64_t number);
+  explicit value(float number);
+  explicit value(double number);
   explicit value(const char *string);
   explicit value(std::string string);
   explicit value(bool boolean);
@@ -143,8 +147,25 @@ inline value::value(json::pair pair)
     : mType(TYPE_OBJECT), mStore(std::make_shared<store<json::object>>(pair)) {}
 inline value::value(json::array array)
     : mType(TYPE_ARRAY), mStore(std::make_shared<store<json::array>>(array)) {}
-template <typename Number>
-inline value::value(Number number, ENABLE_IF_NUMBER(Number))
+inline value::value(int8_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int16_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int32_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int64_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint8_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint16_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint32_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint64_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(float number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(double number)
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 inline value::value(const char *string)
     : mType(TYPE_STRING),
@@ -155,9 +176,7 @@ inline value::value(std::string string)
 inline value::value(bool boolean)
     : mType(TYPE_BOOL), mStore(std::make_shared<store<bool>>(boolean)) {}
 
-#undef ENABLE_IF_NUMBER
 #define CAST(Type) static_cast<store<Type> *>(mStore.get())->value
-
 inline json::type &value::type() { return mType; }
 inline const json::type &value::type() const { return mType; }
 inline json::object &value::object() { return CAST(json::object); }
@@ -170,7 +189,6 @@ inline std::string &value::string() { return CAST(std::string); }
 inline const std::string &value::string() const { return CAST(std::string); }
 inline bool &value::boolean() { return CAST(bool); }
 inline const bool &value::boolean() const { return CAST(bool); }
-
 #undef CAST
 
 inline object::object() {}

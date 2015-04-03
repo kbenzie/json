@@ -137,7 +137,8 @@ json::array read_array(const char *str, position_t &pos, diagnostic_t &diag) {
           return {};
         }
       } break;
-      case '"':
+      case '{':
+      case '[':
       case '-':
       case '0':
       case '1':
@@ -149,8 +150,7 @@ json::array read_array(const char *str, position_t &pos, diagnostic_t &diag) {
       case '7':
       case '8':
       case '9':
-      case '{':
-      case '[':
+      case '"':
       case 't':
       case 'f':
       case 'n': {
@@ -334,7 +334,7 @@ void write_value(const json::value &value, indent_t &indent,
       write_array(value.array(), indent, stream);
       break;
     case json::TYPE_NUMBER:
-      stream << std::setprecision(2048) << value.number();
+      stream << std::setprecision(16) << value.number();
       break;
     case json::TYPE_STRING:
       stream << "\"" << value.string() << "\"";

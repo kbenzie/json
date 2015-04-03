@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
         json::value(4 * atan(1)),
         json::value("string"),
         json::value(true),
-        json::value()
+        json::value(),
       })}
     }
   };
@@ -130,6 +130,23 @@ int main(int argc, char **argv) {
         break;
     }
   }
+
+  json::array friends = json::array{
+    json::value(json::object{
+      {"id", json::value(0)},
+      {"name", json::value("Ayala Benjamin")},
+    }),
+    json::value(json::object{
+      {"id", json::value(1)},
+      {"name", json::value("Cummings Lara")},
+    }),
+    json::value(json::object{
+      {"id", json::value(2)},
+      {"name", json::value("Terri Salas")},
+    }),
+  };
+
+  printf("%s\n", json::write(json::value(friends), "  ").c_str());
 
   return 0;
 }
