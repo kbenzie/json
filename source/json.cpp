@@ -14,7 +14,7 @@ struct indent_t {
 };
 
 struct position_t {
-  position_t() : line(0), column(0), index(0) {}
+  position_t() : line(1), column(1), index(0) {}
 
   position_t &operator++() {
     column++;
@@ -54,7 +54,7 @@ bool consume_whitespace(const char *str, position_t &pos) {
         break;
       case '\n':
         pos.line++;
-        pos.column = 0;
+        pos.column = 1;
         pos.index++;
         break;
       case '\0':
@@ -70,9 +70,10 @@ std::string read_string(const char *str, position_t &pos, diagnostic_t &diag);
 json::value read_value(const char *str, position_t &pos, diagnostic_t &diag);
 
 json::object read_object(const char *str, position_t &pos, diagnostic_t &diag) {
+  pos++;
   json::object object;
   while (true) {
-    if (!consume_whitespace(str, ++pos)) {
+    if (!consume_whitespace(str, pos)) {
       diag.error =
           "No closing object terminator '}' found before end of stream.";
       return {};
@@ -80,11 +81,7 @@ json::object read_object(const char *str, position_t &pos, diagnostic_t &diag) {
 
     switch (str[pos.index]) {
       case ',': {
-        if (!consume_whitespace(str, ++pos)) {
-          diag.error =
-              "Reached end of stream whilst attempting to read object.";
-          return {};
-        }
+        pos++;
       } break;
       case '"': {
         auto key = read_string(str, pos, diag);
@@ -104,17 +101,24 @@ json::object read_object(const char *str, position_t &pos, diagnostic_t &diag) {
         pos++;
         if (!consume_whitespace(str, pos)) {
           diag.error = "Expected data value before reaching end of stream.";
+          return {};
         }
         auto value = read_value(str, pos, diag);
         if (diag) {
           // NOTE: Piggy back on diagnostic set by read_value
+          return {};
         }
         object.add({key, value});
       } break;
-      case '}':
+      case '}': {
         return object;
-      default:
-        break;
+      }
+      case '\n': {
+        pos.line++;
+        pos.column = 1;
+        pos.index++;
+      } break;
+      default: { pos++; } break;
     }
   }
 
@@ -123,19 +127,17 @@ json::object read_object(const char *str, position_t &pos, diagnostic_t &diag) {
 }
 
 json::array read_array(const char *str, position_t &pos, diagnostic_t &diag) {
+  pos++;
   json::array array;
   while (true) {
-    if (!consume_whitespace(str, ++pos)) {
+    if (!consume_whitespace(str, pos)) {
       diag.error = "Reached end of stream whilst attempting to read array.";
       return {};
     }
 
     switch (str[pos.index]) {
       case ',': {
-        if (!consume_whitespace(str, ++pos)) {
-          diag.error = "Reached end of stream whilst attempting to read array.";
-          return {};
-        }
+        pos++;
       } break;
       case '{':
       case '[':
@@ -161,11 +163,16 @@ json::array read_array(const char *str, position_t &pos, diagnostic_t &diag) {
         }
         array.append(value);
       } break;
-      case ']':
+      case ']': {
         pos++;
         return array;
-      defeult:
-        break;
+      }
+      case '\n': {
+        pos.line++;
+        pos.column = 1;
+        pos.index++;
+      } break;
+      default: { pos++; } break;
     }
   }
 
@@ -192,15 +199,20 @@ std::string read_string(const char *str, position_t &pos, diagnostic_t &diag) {
         pos++;
         return string;
       }
-      case '\\':
+      case '\\': {
         // TODO: Handle escape codes
-        break;
-      case '\0':
+      } break;
+      case '\0': {
         diag.error = "No closing '\"' string terminator before end of stream.";
         return {};
-      default:
+      }
+      case '\n': {
+        pos.line++;
+        pos.column = 1;
+      } break;
+      default: {
         // NOTE: Process next character
-        break;
+      } break;
     }
     ++pos;
   }
@@ -216,10 +228,12 @@ json::value read_value(const char *str, position_t &pos, diagnostic_t &diag) {
   }
 
   switch (str[pos.index]) {
-    case '{':
+    case '{': {
       return json::value(read_object(str, pos, diag));
-    case '[':
+    }
+    case '[': {
       return json::value(read_array(str, pos, diag));
+    }
     case '-':
     case '0':
     case '1':
@@ -230,34 +244,47 @@ json::value read_value(const char *str, position_t &pos, diagnostic_t &diag) {
     case '6':
     case '7':
     case '8':
-    case '9':
+    case '9': {
       return json::value(read_number(str, pos, diag));
-    case '"':
+    }
+    case '"': {
       return json::value(read_string(str, pos, diag));
-    case 't':
+    }
+    case 't': {
       if ('r' == str[pos.index + 1] && 'u' == str[pos.index + 2] &&
           'e' == str[pos.index + 3]) {
         pos += 4;
         return json::value(true);
       }
-    case 'f':
+      diag.error = "Expected boolean literal 'true'.";
+      return {};
+    }
+    case 'f': {
       if ('a' == str[pos.index + 1] && 'l' == str[pos.index + 2] &&
           's' == str[pos.index + 3] && 'e' == str[pos.index + 4]) {
         pos += 5;
         return json::value(false);
       }
-    case 'n':
+      diag.error = "Expected boolean literal 'false'.";
+      return {};
+    }
+    case 'n': {
       if ('u' == str[pos.index + 1] && 'l' == str[pos.index + 2] &&
           'l' == str[pos.index + 3]) {
         pos += 4;
         return json::value();
       }
-    case '\0':
+      diag.error = "Expected literal 'null'.";
+      return {};
+    }
+    case '\0': {
       diag.error = "Reached null terminator whilst attempting to read value.";
       return {};
-    default:
+    }
+    default: {
       diag.error = "Unexpected character whilst attempting to read value.";
       return {};
+    }
   }
 
   diag.error = "Reached end of stream whilst attempting to read value.";

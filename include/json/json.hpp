@@ -15,7 +15,7 @@ enum type {
   TYPE_NUMBER,
   TYPE_STRING,
   TYPE_BOOL,
-  TYPE_NULL,
+  TYPE_NULL
 };
 
 // Forward declarations
