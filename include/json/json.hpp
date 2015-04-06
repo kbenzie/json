@@ -33,9 +33,9 @@ class value {
  public:
   // Constructors
   value();  // NOTE: A null value
-  explicit value(json::object object);
-  explicit value(json::pair pair);
-  explicit value(json::array array);
+  value(json::object object);
+  value(json::pair pair);
+  value(json::array array);
   explicit value(int8_t number);
   explicit value(int16_t number);
   explicit value(int32_t number);
@@ -47,7 +47,7 @@ class value {
   explicit value(float number);
   explicit value(double number);
   explicit value(const char *string);
-  explicit value(std::string string);
+  value(std::string string);
   explicit value(bool boolean);
 
   // Accessors
