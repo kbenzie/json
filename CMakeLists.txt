@@ -38,11 +38,14 @@ add_library(JSON
   ${CMAKE_CURRENT_SOURCE_DIR}/include/json/json.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/json.cpp)
 
-add_executable(UnitJSON
-  ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp)
-target_link_libraries(UnitJSON JSON)
+option(JSON_BUILD_TESTS "Enable building of JSON tests." OFF)
+if(${JSON_BUILD_TESTS})
+  add_executable(UnitJSON
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp)
+  target_link_libraries(UnitJSON JSON)
+endif()
 
-option(JSON_BUILD_TOOLS "Enable building of JSON tools" OFF)
+option(JSON_BUILD_TOOLS "Enable building of JSON tools." OFF)
 if(${JSON_BUILD_TOOLS})
   add_executable(jsonv
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/jsonv.cpp)
