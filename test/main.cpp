@@ -74,10 +74,10 @@ int main(int argc, char **argv) {
   printf("%s\n", typeStr(value.type()));
 
   object = value.object();
-  printf("%s\n", typeStr(object.get("key").type()));
-  printf("Value: %f\n", object.get("key").number());
-  printf("%s\n", typeStr(object.get("string").type()));
-  printf("Value: %s\n", object.get("string").string().c_str());
+  printf("%s\n", typeStr(object.get("key")->type()));
+  printf("Value: %f\n", object.get("key")->number());
+  printf("%s\n", typeStr(object.get("string")->type()));
+  printf("Value: %s\n", object.get("string")->string().c_str());
 
   value = json::value{
     json::array{
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
     printf("\"%s\": %s\n", value.first.c_str(), typeStr(value.second.type()));
   }
 
-  array = object.get("array").array();
+  array = object.get("array")->array();
   for (auto &value : array) {
     switch (value.type()) {
       case json::TYPE_OBJECT:

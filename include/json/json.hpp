@@ -117,8 +117,8 @@ class object {
   void add(std::string key, json::value value);
   void add(json::pair pair);
 
-  json::value &get(std::string key);
-  const json::value &get(std::string key) const;
+  json::value *get(std::string key);
+  const json::value *get(std::string key) const;
 
   iterator begin();
   const_iterator begin() const;
@@ -228,9 +228,19 @@ inline void object::add(std::string key, json::value value) {
   mEntries[key] = value;
 }
 inline void object::add(json::pair pair) { mEntries.insert(pair); }
-inline json::value &object::get(std::string key) { return mEntries.at(key); }
-inline const json::value &object::get(std::string key) const {
-  return mEntries.at(key);
+inline json::value *object::get(std::string key) {
+  auto iter = mEntries.find(key);
+  if (mEntries.end() == iter) {
+    return nullptr;
+  }
+  return &iter->second;
+}
+inline const json::value *object::get(std::string key) const {
+  auto iter = mEntries.find(key);
+  if (mEntries.end() == iter) {
+    return nullptr;
+  }
+  return &iter->second;
 }
 inline object::iterator object::begin() { return mEntries.begin(); }
 inline object::const_iterator object::begin() const { return mEntries.begin(); }
