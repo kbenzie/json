@@ -34,11 +34,11 @@ enum option_t {
   // TODO: Options?
 };
 
-void print_usage(const char *arg0) { printf("Usage: jsonv <json file>\n", arg0); }
+void print_usage() { printf("Usage: jsonv <json file>\n"); }
 
 int main(int argc, char **argv) {
   if (2 != argc) {
-    print_usage(argv[0]);
+    print_usage();
     return FAILURE;
   }
   for (int i = 1; i < argc; ++i) {

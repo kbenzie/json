@@ -40,8 +40,6 @@ enum type {
 
 // Forward declarations
 class value;
-class object;
-class array;
 typedef std::pair<const std::string, json::value> pair;
 
 // API
@@ -49,56 +47,6 @@ json::value read(const std::string &string);
 std::string write(const json::value &value, const char *tab = "\t");
 
 // Objects
-class value {
- public:
-  // Constructors
-  value();  // NOTE: A null value
-  value(json::object object);
-  value(json::pair pair);
-  value(json::array array);
-  explicit value(int8_t number);
-  explicit value(int16_t number);
-  explicit value(int32_t number);
-  explicit value(int64_t number);
-  explicit value(uint8_t number);
-  explicit value(uint16_t number);
-  explicit value(uint32_t number);
-  explicit value(uint64_t number);
-  explicit value(float number);
-  explicit value(double number);
-  explicit value(const char *string);
-  value(std::string string);
-  explicit value(bool boolean);
-
-  // Accessors
-  json::type &type();
-  const json::type &type() const;
-  json::object &object();
-  const json::object &object() const;
-  json::array &array();
-  const json::array &array() const;
-  double &number();
-  const double &number() const;
-  std::string &string();
-  const std::string &string() const;
-  bool &boolean();
-  const bool &boolean() const;
-
- private:
-  struct store_base {
-    virtual ~store_base() {}
-  };
-
-  template <typename Type>
-  struct store : public store_base {
-    store(Type value) : value(value) {}
-    Type value;
-  };
-
-  json::type mType;
-  std::shared_ptr<store_base> mStore;
-};
-
 class object {
  public:
   // Types
@@ -158,59 +106,57 @@ class array {
   std::vector<json::value> mEntries;
 };
 
+class value {
+ public:
+  // Constructors
+  value();  // NOTE: A null value
+  value(json::object object);
+  value(json::pair pair);
+  value(json::array array);
+  explicit value(int8_t number);
+  explicit value(int16_t number);
+  explicit value(int32_t number);
+  explicit value(int64_t number);
+  explicit value(uint8_t number);
+  explicit value(uint16_t number);
+  explicit value(uint32_t number);
+  explicit value(uint64_t number);
+  explicit value(float number);
+  explicit value(double number);
+  explicit value(const char *string);
+  value(std::string string);
+  explicit value(bool boolean);
+
+  // Accessors
+  json::type &type();
+  const json::type &type() const;
+  json::object &object();
+  const json::object &object() const;
+  json::array &array();
+  const json::array &array() const;
+  double &number();
+  const double &number() const;
+  std::string &string();
+  const std::string &string() const;
+  bool &boolean();
+  const bool &boolean() const;
+
+ private:
+  struct store_base {
+    virtual ~store_base() {}
+  };
+
+  template <typename Type>
+  struct store : public store_base {
+    store(Type value) : value(value) {}
+    Type value;
+  };
+
+  json::type mType;
+  std::shared_ptr<store_base> mStore;
+};
+
 // Implementations
-inline value::value() : mType(TYPE_NULL), mStore(nullptr) {}
-inline value::value(json::object object)
-    : mType(TYPE_OBJECT),
-      mStore(std::make_shared<store<json::object>>(object)) {}
-inline value::value(json::pair pair)
-    : mType(TYPE_OBJECT), mStore(std::make_shared<store<json::object>>(pair)) {}
-inline value::value(json::array array)
-    : mType(TYPE_ARRAY), mStore(std::make_shared<store<json::array>>(array)) {}
-inline value::value(int8_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(int16_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(int32_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(int64_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(uint8_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(uint16_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(uint32_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(uint64_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(float number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(double number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
-inline value::value(const char *string)
-    : mType(TYPE_STRING),
-      mStore(std::make_shared<store<std::string>>(string)) {}
-inline value::value(std::string string)
-    : mType(TYPE_STRING),
-      mStore(std::make_shared<store<std::string>>(string)) {}
-inline value::value(bool boolean)
-    : mType(TYPE_BOOL), mStore(std::make_shared<store<bool>>(boolean)) {}
-
-#define CAST(Type) static_cast<store<Type> *>(mStore.get())->value
-inline json::type &value::type() { return mType; }
-inline const json::type &value::type() const { return mType; }
-inline json::object &value::object() { return CAST(json::object); }
-inline const json::object &value::object() const { return CAST(json::object); }
-inline json::array &value::array() { return CAST(json::array); }
-inline const json::array &value::array() const { return CAST(json::array); }
-inline double &value::number() { return CAST(double); }
-inline const double &value::number() const { return CAST(double); }
-inline std::string &value::string() { return CAST(std::string); }
-inline const std::string &value::string() const { return CAST(std::string); }
-inline bool &value::boolean() { return CAST(bool); }
-inline const bool &value::boolean() const { return CAST(bool); }
-#undef CAST
-
 inline object::object() {}
 inline object::object(std::string key, json::value value) {
   mEntries[key] = value;
@@ -270,6 +216,58 @@ inline const json::value &array::at(const size_t index) const {
 }
 inline size_t array::size() { return mEntries.size(); }
 inline size_t array::size() const { return mEntries.size(); }
+
+inline value::value() : mType(TYPE_NULL), mStore(nullptr) {}
+inline value::value(json::object object)
+    : mType(TYPE_OBJECT),
+      mStore(std::make_shared<store<json::object>>(object)) {}
+inline value::value(json::pair pair)
+    : mType(TYPE_OBJECT), mStore(std::make_shared<store<json::object>>(pair)) {}
+inline value::value(json::array array)
+    : mType(TYPE_ARRAY), mStore(std::make_shared<store<json::array>>(array)) {}
+inline value::value(int8_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int16_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int32_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(int64_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint8_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint16_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint32_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(uint64_t number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(float number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(double number)
+    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+inline value::value(const char *string)
+    : mType(TYPE_STRING),
+      mStore(std::make_shared<store<std::string>>(string)) {}
+inline value::value(std::string string)
+    : mType(TYPE_STRING),
+      mStore(std::make_shared<store<std::string>>(string)) {}
+inline value::value(bool boolean)
+    : mType(TYPE_BOOL), mStore(std::make_shared<store<bool>>(boolean)) {}
+
+#define CAST(Type) static_cast<store<Type> *>(mStore.get())->value
+inline json::type &value::type() { return mType; }
+inline const json::type &value::type() const { return mType; }
+inline json::object &value::object() { return CAST(json::object); }
+inline const json::object &value::object() const { return CAST(json::object); }
+inline json::array &value::array() { return CAST(json::array); }
+inline const json::array &value::array() const { return CAST(json::array); }
+inline double &value::number() { return CAST(double); }
+inline const double &value::number() const { return CAST(double); }
+inline std::string &value::string() { return CAST(std::string); }
+inline const std::string &value::string() const { return CAST(std::string); }
+inline bool &value::boolean() { return CAST(bool); }
+inline const bool &value::boolean() const { return CAST(bool); }
+#undef CAST
 }
 
 #endif
